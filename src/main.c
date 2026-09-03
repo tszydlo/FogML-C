@@ -1,5 +1,5 @@
 /*
-   Copyright 2021 FogML
+   Copyright 2026 FogML
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -104,6 +104,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    int total_lines = 0;
+    int train_lines = 0;
+
     while (fgets(line, sizeof(line), fp) != NULL) {
         line[strcspn(line, "\r\n")] = '\0';
 
@@ -120,11 +123,23 @@ int main(int argc, char *argv[]) {
                meta.segment, meta.anomaly, meta.train, meta.channel,
                meta.sampling, meta.duration, meta.len);
 
+
+        /*FogML Learning*/
+        fogml_learning(features);
+
         /* features[] now holds the row's remaining values, ready to be fed
            into the fogml_sdk pipeline (DSP/scaler/anomaly) in a later step. */
         (void)features;
+
+        total_lines++;
+        if (meta.train) {
+            train_lines++;
+        }
     }
 
     fclose(fp);
+
+    printf("Train lines: %d / %d\n", train_lines, total_lines);
+
     return 0;
 }
