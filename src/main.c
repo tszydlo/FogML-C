@@ -107,6 +107,7 @@ int main(int argc, char *argv[]) {
 
     int total_lines = 0;
     int train_lines = 0;
+    int matched_count = 0;
 
     while (fgets(line, sizeof(line), fp) != NULL) {
         line[strcspn(line, "\r\n")] = '\0';
@@ -125,8 +126,8 @@ int main(int argc, char *argv[]) {
                meta.sampling, meta.duration, meta.len);
 
 
-        /*FogML Learning - only for rows belonging to the training split */
-        if (meta.train) {        
+        /*FogML Learning - only for rows belonging to the training split, and only normal (good) data for training */
+        if (meta.train && !meta.anomaly) {        
             fogml_learning(features);
         }
 
@@ -134,6 +135,14 @@ int main(int argc, char *argv[]) {
         if (!meta.train) {
             float score;
             fogml_processing(features, &score);
+            printf("score=%f\n", score);
+
+            // Only LOF score > 2.0 trated as anomaly - threshold can be set in the semi-supervised learning
+            int detected_anomaly = (score > 2.0) ? 1 : 0;
+
+            if (detected_anomaly == meta.anomaly) {
+                matched_count++;
+            }
         }
 
         total_lines++;
@@ -145,6 +154,14 @@ int main(int argc, char *argv[]) {
     fclose(fp);
 
     printf("Train lines: %d / %d\n", train_lines, total_lines);
+
+    printf("Matched count: %d \n", matched_count);
+
+    if (train_lines > 0) {
+        //float accuracy = matched_count / (float)train_lines;//((double)total_lines - train_lines);
+        float accuracy = matched_count / ((double)total_lines - train_lines);
+        printf("Accuracy: %f\n", accuracy);
+    }
 
     return 0;
 }

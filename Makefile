@@ -5,8 +5,8 @@ FOGML_SDK_DIR = lib/fogml_sdk
 # fogml_sdk/ports/fogml_ports.h only pulls in <math.h>/<stdbool.h>/<stddef.h>/<string.h>
 # under __ZEPHYR__ (Arduino.h supplies the Arduino equivalents); force-include them here
 # for this plain host build instead of patching the vendored submodule.
-CFLAGS = -Wall -Wextra -O2 -g -std=c11 \
-         -include math.h -include stdbool.h -include stddef.h -include string.h
+CFLAGS_COMMON = -Wall -Wextra -O2 -std=c11 \
+                -include math.h -include stdbool.h -include stddef.h -include string.h
 LDLIBS = -lm
 
 INCS = -Isrc \
@@ -31,20 +31,31 @@ SRC = src/main.c \
       $(FOGML_SDK_DIR)/dsp/kissfft/kiss_fftr.c \
       $(FOGML_SDK_DIR)/scaler/fogml_scaler.c
 
-OBJDIR = build
-OBJ = $(patsubst %.c,$(OBJDIR)/%.o,$(SRC))
-
+BUILDDIR = build
 OUTDIR = bin
 NAME = fogml_c
 
-build: $(OUTDIR)/$(NAME)
+RELEASE_DIR = $(BUILDDIR)/release
+DEBUG_DIR = $(BUILDDIR)/debug
 
-$(OUTDIR)/$(NAME): $(OBJ) | $(OUTDIR)
-	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDLIBS)
+OBJ_RELEASE = $(patsubst %.c,$(RELEASE_DIR)/%.o,$(SRC))
+OBJ_DEBUG = $(patsubst %.c,$(DEBUG_DIR)/%.o,$(SRC))
 
-$(OBJDIR)/%.o: %.c
+# `make`       -> release build, no debug info, objects under build/release
+build: $(OBJ_RELEASE) | $(OUTDIR)
+	$(CC) $(CFLAGS_COMMON) -o $(OUTDIR)/$(NAME) $(OBJ_RELEASE) $(LDLIBS)
+
+# `make debug` -> debug build (-g), objects under build/debug
+debug: $(OBJ_DEBUG) | $(OUTDIR)
+	$(CC) $(CFLAGS_COMMON) -g -o $(OUTDIR)/$(NAME) $(OBJ_DEBUG) $(LDLIBS)
+
+$(RELEASE_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(INCS) -c -o $@ $<
+	$(CC) $(CFLAGS_COMMON) $(INCS) -c -o $@ $<
+
+$(DEBUG_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS_COMMON) -g $(INCS) -c -o $@ $<
 
 $(OUTDIR):
 	mkdir -p $(OUTDIR)
@@ -53,6 +64,6 @@ run: build
 	./$(OUTDIR)/$(NAME)
 
 clean:
-	rm -rf $(OBJDIR) $(OUTDIR)
+	rm -rf $(BUILDDIR) $(OUTDIR)
 
-.PHONY: build run clean
+.PHONY: build debug run clean

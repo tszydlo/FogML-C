@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-#define FOGML_VERBOSE
+//#define FOGML_VERBOSE
 
 // DIGITAL SIGNAL PROCESSING
 // number of features - depends on the DSP blocks
@@ -25,7 +25,7 @@ extern "C" {
 
 
 // RESERVOIR SAMPLING
-#define MY_RESERVOIR_SIZE  100
+#define MY_RESERVOIR_SIZE  10
 float my_reservoir[MY_RESERVOIR_SIZE * FOGML_VECTOR_SIZE];
 
 tinyml_reservoir_sampling_config_t my_rs_config = {
@@ -41,7 +41,7 @@ float my_kdistance[MY_RESERVOIR_SIZE];
 float my_lrd[MY_RESERVOIR_SIZE];
 
 tinyml_lof_config_t my_lof_config = {
-  .parameter_k = 3,  //k nearest neighbours are considered
+  .parameter_k = 2,  //k nearest neighbours are considered
   .k_distance = my_kdistance,  //table of k-distance for each of n points
   .lrd = my_lrd, //Local Reachability Density for each of n points
   .n = MY_RESERVOIR_SIZE, //number of points in data
@@ -58,7 +58,7 @@ void fogml_learning(float *vector) {
     tinyml_reservoir_sampling(vector, &my_rs_config);
 
 #ifdef FOGML_VERBOSE
-    //tinyml_reservoir_verbose(&my_rs_config);
+    tinyml_reservoir_verbose(&my_rs_config);
     for(int i = 0; i < FOGML_VECTOR_SIZE; i++) {
         fogml_printf_float(vector[i]);
         fogml_printf(" ");
@@ -66,8 +66,14 @@ void fogml_learning(float *vector) {
     fogml_printf("\n");
 #endif
 
+    //If the number of points in the reservoir is lower than its capacity then LOF should analyse only the available points
+    if (my_rs_config.k < MY_RESERVOIR_SIZE){
+        my_lof_config.n = my_rs_config.k;
+    } else{
+        my_lof_config.n = MY_RESERVOIR_SIZE;
+    }
     tinyml_lof_learn(&my_lof_config);
-    
+
     //free(vector);
 }
 
@@ -90,7 +96,7 @@ void fogml_processing(float *vector, float *score) {
     fogml_printf("\n");
 #endif
 
-    free(vector);
+    //free(vector);
 } 
 
 #ifdef __cplusplus
