@@ -53,18 +53,9 @@ dkms.conf
 
 # debug information files
 *.dwo
-dataset/CADC0872-1.csv
-dataset/CADC0872-5.csv
-dataset/CADC0873-1.csv
-dataset/CADC0873-5.csv
-dataset/CADC0874-1.csv
-dataset/CADC0874-5.csv
-dataset/CADC0884-5.csv
-dataset/CADC0886-5.csv
-dataset/CADC0888-5.csv
-dataset/CADC0890-5.csv
-dataset/CADC0892-1.csv
-dataset/CADC0892-5.csv
-dataset/CADC0894-1.csv
-dataset/CADC0894-5.csv
+dataset/CADC*.csv
 dataset/dataset.csv
+
+# Build output
+build/
+bin/
