@@ -12,6 +12,7 @@
 */
 
 #include "fogml_sdk/fogml.h"
+#include "fogml_config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -124,12 +125,16 @@ int main(int argc, char *argv[]) {
                meta.sampling, meta.duration, meta.len);
 
 
-        /*FogML Learning*/
-        fogml_learning(features);
+        /*FogML Learning - only for rows belonging to the training split */
+        if (meta.train) {        
+            fogml_learning(features);
+        }
 
-        /* features[] now holds the row's remaining values, ready to be fed
-           into the fogml_sdk pipeline (DSP/scaler/anomaly) in a later step. */
-        (void)features;
+        /* FogML Processing - only for rows not belonging to the training split */
+        if (!meta.train) {
+            float score;
+            fogml_processing(features, &score);
+        }
 
         total_lines++;
         if (meta.train) {

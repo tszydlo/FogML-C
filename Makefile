@@ -5,7 +5,7 @@ FOGML_SDK_DIR = lib/fogml_sdk
 # fogml_sdk/ports/fogml_ports.h only pulls in <math.h>/<stdbool.h>/<stddef.h>/<string.h>
 # under __ZEPHYR__ (Arduino.h supplies the Arduino equivalents); force-include them here
 # for this plain host build instead of patching the vendored submodule.
-CFLAGS = -Wall -Wextra -O2 -std=c11 \
+CFLAGS = -Wall -Wextra -O2 -g -std=c11 \
          -include math.h -include stdbool.h -include stddef.h -include string.h
 LDLIBS = -lm
 

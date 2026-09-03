@@ -68,7 +68,7 @@ void fogml_learning(float *vector) {
 
     tinyml_lof_learn(&my_lof_config);
     
-    free(vector);
+    //free(vector);
 }
 
 
