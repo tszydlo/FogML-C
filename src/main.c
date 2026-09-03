@@ -137,8 +137,8 @@ int main(int argc, char *argv[]) {
             fogml_processing(features, &score);
             printf("score=%f\n", score);
 
-            // Only LOF score > 2.0 trated as anomaly - threshold can be set in the semi-supervised learning
-            int detected_anomaly = (score > 2.0) ? 1 : 0;
+            // Only LOF score > 1.5 trated as anomaly - threshold can be set in the semi-supervised learning
+            int detected_anomaly = (score > 1.5) ? 1 : 0;
 
             if (detected_anomaly == meta.anomaly) {
                 matched_count++;

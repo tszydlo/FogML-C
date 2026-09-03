@@ -19,6 +19,7 @@ More details on the algorithms used are described in the paper https://arxiv.org
 * `tools` — Jupyter notebook(s) for training models and generating the C source consumed by
   `src/fogml_generated`
 * `doc` — diagrams/images used in this README
+* `run_all_channels.sh` — batch-runs every per-channel CSV in `dataset/` through `bin/fogml_c`
 
 ## Getting the code
 
@@ -34,20 +35,56 @@ or, if already cloned:
 git submodule update --init --recursive
 ```
 
-## Building and running
+## Building
 
 ```bash
-make        # builds bin/fogml_c
-make run    # builds (if needed) and runs it
+make        # release build -> bin/fogml_c, no debug info
+make debug  # debug build (-g) -> bin/fogml_c, objects under build/debug
 make clean  # removes build/ and bin/
 ```
 
+`make run` also exists but invokes the binary with no arguments, which just prints its usage
+message — a real CSV path is required, so see **Usage** below instead.
+
+## Usage
+
+```bash
+./bin/fogml_c dataset/<channel>.csv
+```
+
+e.g. `./bin/fogml_c dataset/CADC0886-5.csv`. Each per-channel CSV's first line is a legend/header
+and is skipped; every row after that is one labeled segment. For each row the program prints its
+metadata (`segment`, `anomaly`, `train`, `channel`, `sampling`, `duration`, `len`), then:
+
+* if the row belongs to the training split and is labeled non-anomalous (`train==1 && anomaly==0`),
+  its feature vector updates the reservoir-sampled Local Outlier Factor (LOF) model
+  (`fogml_learning`, via `fogml_sdk`'s `anomaly_rt`);
+* otherwise (`train==0`), the feature vector is scored against that model (`fogml_processing`),
+  the LOF `score` is printed, and the row is classified anomalous when `score > 2.0` (this
+  threshold is set in `src/fogml_config.h` and can be tuned there) — that classification is then
+  checked against the row's ground-truth `anomaly` label.
+
+After all rows are processed, it prints `Train lines: X / Y`, `Matched count: Z`, and
+`Accuracy: ...` — the fraction of non-training rows whose classification matched the ground-truth
+label.
+
+## Running all channels
+
+```bash
+./run_all_channels.sh
+```
+
+Requires `bin/fogml_c` to already be built (`make`). Runs every `dataset/CADC*.csv` file (the
+per-channel splits — not the unsplit `dataset/dataset.csv`) through the binary in turn, printing
+each channel's results and accuracy.
+
 ## Status
 
-This example currently wires up the build against `fogml_sdk` (DSP, scaler, anomaly/LOF,
-reservoir sampling) and runs a minimal "Hello World!" to prove the include paths and linking are
-correct. The actual anomaly-detection/classification pipeline (feature extraction → scaling →
-model) is not yet wired into `main.c`.
+This example implements a working, semi-supervised online anomaly detector for the OPS-SAT-AD
+dataset: reservoir sampling + Local Outlier Factor from `fogml_sdk`, trained incrementally on the
+non-anomalous rows of each channel's training split and evaluated against the remaining rows. See
+**Usage** above for what it prints, and `src/fogml_config.h` for the model configuration
+(reservoir size, LOF `k`, anomaly-score threshold).
 
 ## Bibliography
 
