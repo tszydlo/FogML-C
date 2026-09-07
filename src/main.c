@@ -107,6 +107,7 @@ int main(int argc, char *argv[]) {
 
     int total_lines = 0;
     int train_lines = 0;
+    int test_lines = 0;
     int matched_count = 0;
 
     while (fgets(line, sizeof(line), fp) != NULL) {
@@ -143,6 +144,7 @@ int main(int argc, char *argv[]) {
             if (detected_anomaly == meta.anomaly) {
                 matched_count++;
             }
+            test_lines++;
         }
 
         total_lines++;
@@ -159,7 +161,8 @@ int main(int argc, char *argv[]) {
 
     if (train_lines > 0) {
         //float accuracy = matched_count / (float)train_lines;//((double)total_lines - train_lines);
-        float accuracy = matched_count / ((double)total_lines - train_lines);
+        //float accuracy = matched_count / ((double)total_lines - train_lines);
+        float accuracy = matched_count / ((double)test_lines);
         printf("Accuracy: %f\n", accuracy);
     }
 

@@ -41,7 +41,7 @@ float my_kdistance[MY_RESERVOIR_SIZE];
 float my_lrd[MY_RESERVOIR_SIZE];
 
 tinyml_lof_config_t my_lof_config = {
-  .parameter_k = 2,  //k nearest neighbours are considered
+  .parameter_k = 3,  //k nearest neighbours are considered
   .k_distance = my_kdistance,  //table of k-distance for each of n points
   .lrd = my_lrd, //Local Reachability Density for each of n points
   .n = MY_RESERVOIR_SIZE, //number of points in data
@@ -87,6 +87,13 @@ void fogml_processing(float *vector, float *score) {
     }
     fogml_printf("\n");
 #endif
+
+    //If the number of points in the reservoir is lower than its capacity then LOF should analyse only the available points
+    if (my_rs_config.k < MY_RESERVOIR_SIZE){
+        my_lof_config.n = my_rs_config.k;
+    } else{
+        my_lof_config.n = MY_RESERVOIR_SIZE;
+    }
 
     *score = tinyml_lof_score(vector, &my_lof_config);
 
